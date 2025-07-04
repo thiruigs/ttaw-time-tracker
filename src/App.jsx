@@ -1,3 +1,4 @@
+import './style.css';
 import React, { useState, useEffect } from 'react';
 import { auth, db } from './firebaseConfig';
 import {
@@ -146,22 +147,22 @@ function App() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           /><br /><br />
-          <button onClick={login}>Login</button>
+          <button onClick={login} className="btn btn-login">Login</button>
         </div>
       ) : (
         <div>
           <h2>Welcome, {user.email}</h2>
-          <button onClick={logout}>Logout</button>
+          <button onClick={logout} className="btn btn-logout">Logout</button>
           <br /><br />
 
           {startTime ? (
             <div>
               <p>⏱️ Timer started at: {startTime.toLocaleTimeString()}</p>
               <p>⏳ Timer running: {formatTime(elapsedTime)}</p>
-              <button onClick={stopTimer}>Stop Timer</button>
+              <button onClick={stopTimer} className="btn btn-stop">Stop Timer</button>
             </div>
           ) : (
-            <button onClick={startTimer}>Start Timer</button>
+            <button onClick={startTimer} className="btn btn-start">Start Timer</button>
           )}
 
           {endTime && (
