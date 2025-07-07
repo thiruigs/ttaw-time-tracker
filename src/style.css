@@ -30,3 +30,22 @@
   background-color: #ffc107;
   color: black;
 }
+
+input {
+  padding: 0.4rem;
+  margin-right: 0.5rem;
+}
+
+button {
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+
+.alert-box {
+  background-color: #fdd;
+  border: 1px solid red;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+}
+

@@ -1,0 +1,73 @@
+/* src/pages/Landing.css */
+.landing-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: url('/background.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.glass-card button {
+  
+  padding: 15px 30px;
+  font-size: 18px;
+  background: rgba(192, 39, 39, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+}
+
+.glass-card button:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Signup Button - Green Glassy */
+.signup-btn {
+  padding: 15px 30px;
+  font-size: 18px;
+  background: rgba(76, 175, 80, 0.2);
+  color: #2e7d32;
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: 0.3s ease;
+  margin-right: 30px;
+}
+
+.signup-btn:hover {
+  background: rgba(76, 175, 80, 0.4);
+  transform: scale(1.05);
+}
+
+/* Signin Button - Blue Glassy */
+.signin-btn {
+  padding: 15px 30px;
+  font-size: 18px;
+  background: rgba(33, 150, 243, 0.2);
+  color: #0d47a1;
+  border: 2px solid rgba(33, 150, 243, 0.3);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.signin-btn:hover {
+  background: rgba(33, 150, 243, 0.4);
+  transform: scale(1.05);
+}

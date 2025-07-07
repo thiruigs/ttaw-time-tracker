@@ -1,5 +1,5 @@
-import './style.css';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { auth, db } from './firebaseConfig';
 import {
   signInWithEmailAndPassword,
@@ -12,33 +12,76 @@ import {
   serverTimestamp,
   query,
   where,
-  orderBy,
   getDocs
 } from 'firebase/firestore';
+
+// Admin layout and pages
+import AdminLayout from './admin/AdminLayout';
+import AdminDashboard from './admin/AdminDashboard';
+import Teams from './admin/Teams';
+import Clients from './admin/Clients';
+import Projects from './admin/Projects';
+import Tasks from './admin/Tasks';
+import Staff from './admin/Staff';
+import Reports from './admin/Reports';
+import MyTimesheet from './admin/MyTimesheet';
+import Settings from './admin/Settings';
+import Leave from './admin/Leave';
+import Attendance from './admin/Attendance';
+import StaffTypes from './admin/StaffTypes';
+import ShiftTimes from './admin/ShiftTimes';
+
+//import MultiSelectTest from './test/MultiSelectTest';
+
+import CreateProject from './admin/projects/CreateProject';
+import AssignStaff from './admin/projects/AssignStaff';
+import RemoveStaff from './admin/projects/RemoveStaff';
+import AssignTask from './admin/projects/AssignTask';
+import RemoveTask from './admin/projects/RemoveTask';
+
+import Landing from './pages/Landing';
+import Signup from './pages/Signup';
+import Signin from './pages/Signin'; // coming next
+
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+
+import Activate from './pages/Activate';
+/*import StaffHome from './pages/StaffHome';*/ // will create this next
+
+import AdminHome from './admin/AdminHome';
+
+/*import TimerPage from './pages/TimerPage';*/
+
+import ActivateAccount from './pages/ActivateAccount';
+
+import StaffLayout from './layouts/StaffLayout';
+import StaffHome from './pages/staff/StaffHome';
+import TimerPage from './pages/staff/TimerPage';
+import StaffReports from './pages/staff/StaffReports';
+
+import FixProjectTasks from './pages/utils/FixProjectTasks';
+
+import FixProjectStaffs from './pages/utils/FixProjectStaffs';
 
 function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
-
   const [startTime, setStartTime] = useState(null);
   const [endTime, setEndTime] = useState(null);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [timerInterval, setTimerInterval] = useState(null);
-
   const [logs, setLogs] = useState([]);
-  const [allLogs, setAllLogs] = useState([]);
-
-  const adminEmails = ['thiru@example.com']; // 👈 replace with your email
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        loadLogs(currentUser.uid);
-        if (adminEmails.includes(currentUser.email)) {
-          loadAllLogs();
-        }
+        const q = query(
+          collection(db, 'timeLogs'),
+          where('uid', '==', currentUser.uid)
+        );
+        const snapshot = await getDocs(q);
+        setLogs(snapshot.docs.map(doc => doc.data()));
       }
     });
     return () => unsubscribe();
@@ -57,25 +100,13 @@ function App() {
   };
 
   const startTimer = () => {
-    const now = new Date();
-    setStartTime(now);
+    setStartTime(new Date());
     setEndTime(null);
-    setElapsedTime(0);
-    const interval = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
-    }, 1000);
-    setTimerInterval(interval);
   };
 
   const stopTimer = async () => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      setTimerInterval(null);
-    }
-
     const end = new Date();
     setEndTime(end);
-
     if (user && startTime) {
       try {
         await addDoc(collection(db, 'timeLogs'), {
@@ -86,54 +117,20 @@ function App() {
           createdAt: serverTimestamp(),
         });
         alert("Time logged to Firestore!");
-        loadLogs(user.uid);
-        if (adminEmails.includes(user.email)) {
-          loadAllLogs();
-        }
       } catch (e) {
-        console.error("Error adding document: ", e);
         alert("Failed to log time.");
+        console.error(e);
       }
     }
-
     setStartTime(null);
-    setElapsedTime(0);
   };
 
-  const loadLogs = async (uid) => {
-    const q = query(
-      collection(db, 'timeLogs'),
-      where('uid', '==', uid),
-      orderBy('createdAt', 'desc')
-    );
-    const snapshot = await getDocs(q);
-    const data = snapshot.docs.map(doc => doc.data());
-    setLogs(data);
-  };
-
-  const loadAllLogs = async () => {
-    const q = query(
-      collection(db, 'timeLogs'),
-      orderBy('createdAt', 'desc')
-    );
-    const snapshot = await getDocs(q);
-    const data = snapshot.docs.map(doc => doc.data());
-    setAllLogs(data);
-  };
-
-  const formatTime = (totalSeconds) => {
-    const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
-    const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
-    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-    return `${hours}:${minutes}:${seconds}`;
-  };
-
-  return (
+  // Public Home Component
+  const LoginOrHome = () => (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
       <h1>🕒 Time Tracker</h1>
-
       {!user ? (
-        <div>
+        <>
           <h2>Login</h2>
           <input
             type="email"
@@ -147,94 +144,108 @@ function App() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           /><br /><br />
-          <button onClick={login} className="btn btn-login">Login</button>
-        </div>
+          <button onClick={login}>Login</button>
+        </>
       ) : (
-        <div>
+        <>
           <h2>Welcome, {user.email}</h2>
-          <button onClick={logout} className="btn btn-logout">Logout</button>
-          <br /><br />
-
+          <button onClick={logout}>Logout</button><br /><br />
           {startTime ? (
-            <div>
+            <>
               <p>⏱️ Timer started at: {startTime.toLocaleTimeString()}</p>
-              <p>⏳ Timer running: {formatTime(elapsedTime)}</p>
-              <button onClick={stopTimer} className="btn btn-stop">Stop Timer</button>
-            </div>
+              <button onClick={stopTimer}>Stop Timer</button>
+            </>
           ) : (
-            <button onClick={startTimer} className="btn btn-start">Start Timer</button>
+            <button onClick={startTimer}>Start Timer</button>
           )}
-
           {endTime && (
             <p>🛑 Timer stopped at: {endTime.toLocaleTimeString()}</p>
           )}
-
-          {/* Personal Logs Table */}
-          <h3 style={{ marginTop: '2rem' }}>📋 Your Time Logs</h3>
-          <table border="1" cellPadding="8" style={{ borderCollapse: 'collapse' }}>
+          <h3>⏳ Time Logs</h3>
+          <table border="1" cellPadding="5">
             <thead>
               <tr>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Duration</th>
+                <th>Start</th>
+                <th>End</th>
               </tr>
             </thead>
             <tbody>
-              {logs.map((log, index) => {
-                const start = new Date(log.start.seconds * 1000);
-                const end = new Date(log.end.seconds * 1000);
-                const durationMs = end - start;
-                const minutes = Math.floor(durationMs / 60000);
-                const seconds = Math.floor((durationMs % 60000) / 1000);
-
-                return (
-                  <tr key={index}>
-                    <td>{start.toLocaleTimeString()}</td>
-                    <td>{end.toLocaleTimeString()}</td>
-                    <td>{`${minutes}m ${seconds}s`}</td>
-                  </tr>
-                );
-              })}
+              {logs.map((log, index) => (
+                <tr key={index}>
+                  <td>{new Date(log.start.seconds * 1000).toLocaleString()}</td>
+                  <td>{new Date(log.end.seconds * 1000).toLocaleString()}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
-
-          {/* Admin Dashboard Table */}
-          {adminEmails.includes(user.email) && (
-            <>
-              <h3 style={{ marginTop: '3rem', color: 'darkred' }}>👑 Admin Dashboard – All Logs</h3>
-              <table border="1" cellPadding="8" style={{ borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    <th>Email</th>
-                    <th>Start Time</th>
-                    <th>End Time</th>
-                    <th>Duration</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allLogs.map((log, index) => {
-                    const start = new Date(log.start.seconds * 1000);
-                    const end = new Date(log.end.seconds * 1000);
-                    const durationMs = end - start;
-                    const minutes = Math.floor(durationMs / 60000);
-                    const seconds = Math.floor((durationMs % 60000) / 1000);
-                    return (
-                      <tr key={index}>
-                        <td>{log.email}</td>
-                        <td>{start.toLocaleString()}</td>
-                        <td>{end.toLocaleString()}</td>
-                        <td>{`${minutes}m ${seconds}s`}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </>
-          )}
-        </div>
+        </>
       )}
     </div>
   );
+
+  return (
+  <Router>
+    <Routes>
+      {/* Root routes */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/signin" element={<Signin />} />
+
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:userId/:token" element={<ResetPassword />} />
+
+      {/* Admin routes */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminHome />} />
+        <Route path="teams" element={<Teams />} />
+        <Route path="clients" element={<Clients />} />
+        <Route path="staff" element={<Staff />} />
+        <Route path="reports" element={<Reports />} />
+        <Route path="my-timesheet" element={<MyTimesheet />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="leave" element={<Leave />} />
+        <Route path="attendance" element={<Attendance />} />
+        <Route path="staff-types" element={<StaffTypes />} />
+        <Route path="shift-times" element={<ShiftTimes />} />
+        <Route path="tasks" element={<Tasks />} />
+
+        {/* Project sub-pages under /admin/projects */}
+        <Route path="projects/create" element={<CreateProject />} />
+        <Route path="projects/assign-staff" element={<AssignStaff />} />
+        <Route path="projects/remove-staff" element={<RemoveStaff />} />
+        <Route path="projects/assign-task" element={<AssignTask />} />
+        <Route path="projects/remove-task" element={<RemoveTask />} />
+
+      </Route>
+
+      
+
+      <Route path="/activate/:code" element={<ActivateAccount />} />
+
+      <Route path="/activate/:id/:token" element={<ActivateAccount />} />
+
+      {/*<Route path="/staff-home" element={<StaffHome />} />
+      <Route path="/staff/timer" element={<TimerPage />} />
+      <Route path="/staff/reports" element={<Reports />} />*/}
+
+
+      <Route path="/staff" element={<StaffLayout />}>
+        {/*<Route path="home" element={<StaffHome />} />*/}
+        <Route path="timer" element={<TimerPage />} />
+        {/*<Route path="reports" element={<StaffReports />} />*/}
+      </Route>
+
+      <Route path="/fix-project-tasks" element={<FixProjectTasks />} />
+
+      <Route path="/fix-project-staffs" element={<FixProjectStaffs />} />
+
+    </Routes>
+  </Router>
+);
+
+
+
+  //return <MultiSelectTest />;
 }
 
 export default App;

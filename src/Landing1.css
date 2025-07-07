@@ -1,0 +1,34 @@
+/* src/pages/Landing.css */
+.landing-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: url('/background.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.glass-card button {
+  margin: 10px;
+  padding: 12px 30px;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.glass-card button:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
